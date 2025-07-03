@@ -1,0 +1,49 @@
+name: Build Php Extensions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php_version:
+          - 8.2
+          - 8.3
+          - 8.4
+        extension:
+          - xdebug
+          - pgsql
+          - pdo_pgsql
+          - redis
+          - opcache
+          - pcntl
+          - zip
+          - intl
+    name: ext-${{ matrix.extension }}@php${{ matrix.php_version }}
+    steps:
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php_version }}
+
+      - name: Find extension directory
+        id: extension_dir
+        run: |
+          php -r 'echo "extension_dir=" . ini_get("extension_dir");' >> "$GITHUB_OUTPUT"
+
+      - name: Install build script
+        run: |
+          curl https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
+            -o /usr/local/bin/install-php-extensions
+          chmod +x /usr/local/bin/install-php-extensions
+
+      - name: Build extension
+        run: |
+          install-php-extensions ${{ matrix.extension }}
+
+      - name: Archive extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: ext-${{ matrix.extension }}-php-${{ matrix.php_version }}
+          path: ${{ steps.extension_dir.outputs.extension_dir }}/${{ matrix.extension }}.so
