@@ -42,15 +42,10 @@ jobs:
         run: |
           install-php-extensions ${{ matrix.extension }}
 
-      - name: Retrieve extension version
-        id: extension_version
-        run: |
-          php -r 'echo "extension_version=" . phpversion("${{ matrix.extension }}");' >> "$GITHUB_OUTPUT"
-
       - name: Archive extension
         uses: actions/upload-artifact@v4
         with:
-          name: ext-${{ matrix.extension }}-v${{ steps.extension_version.outputs.extension_version }}-php-${{ matrix.php_version }}
+          name: ext-${{ matrix.extension }}-php-${{ matrix.php_version }}
           path: ${{ steps.extension_dir.outputs.extension_dir }}/${{ matrix.extension }}.so
           retention-days: 1
 
