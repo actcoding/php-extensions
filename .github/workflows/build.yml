@@ -42,8 +42,39 @@ jobs:
         run: |
           install-php-extensions ${{ matrix.extension }}
 
+      - name: Retrieve extension version
+        id: extension_version
+        run: |
+          php -r 'echo "extension_version=" . phpversion("${{ matrix.extension }}");' >> "$GITHUB_OUTPUT"
+
       - name: Archive extension
         uses: actions/upload-artifact@v4
         with:
-          name: ext-${{ matrix.extension }}-php-${{ matrix.php_version }}
+          name: ext-${{ matrix.extension }}-v${{ steps.extension_version.outputs.extension_version }}-php-${{ matrix.php_version }}
           path: ${{ steps.extension_dir.outputs.extension_dir }}/${{ matrix.extension }}.so
+          retention-days: 1
+
+  upload:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Merge extensions
+        run: |
+          rsync -a artifacts/ extensions/
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add extensions
+          git commit --no-interactive -m "chore: update extensions"
+          git push
