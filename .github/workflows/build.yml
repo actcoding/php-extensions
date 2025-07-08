@@ -21,32 +21,35 @@ jobs:
           - pcntl
           - zip
           - intl
-    name: ext-${{ matrix.extension }}@php${{ matrix.php_version }}
+        arch:
+          - amd64
+          - arm64
+    name: ext-${{ matrix.extension }}@php${{ matrix.php_version }}@${{ matrix.arch }}
     steps:
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
         with:
-          php-version: ${{ matrix.php_version }}
+          platforms: linux/${{ matrix.arch }}
 
-      - name: Find extension directory
-        id: extension_dir
-        run: |
-          php -r 'echo "extension_dir=" . ini_get("extension_dir");' >> "$GITHUB_OUTPUT"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/${{ matrix.arch }}
 
-      - name: Install build script
-        run: |
-          curl https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
-            -o /usr/local/bin/install-php-extensions
-          chmod +x /usr/local/bin/install-php-extensions
-
-      - name: Build extension
-        run: |
-          install-php-extensions ${{ matrix.extension }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/${{ matrix.arch }}
+          push: false
+          outputs: .
 
       - name: Archive extension
         uses: actions/upload-artifact@v4
         with:
-          name: ext-${{ matrix.extension }}-php-${{ matrix.php_version }}
-          path: ${{ steps.extension_dir.outputs.extension_dir }}/${{ matrix.extension }}.so
+          name: ext-${{ matrix.extension }}-php-${{ matrix.php_version }}-${{ matrix.arch }}
+          path: ${{ matrix.extension }}.so
           retention-days: 1
 
   upload:
