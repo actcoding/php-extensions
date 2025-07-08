@@ -45,6 +45,8 @@ jobs:
           push: false
           outputs: .
 
+      - run: ls -Al
+
       - name: Archive extension
         uses: actions/upload-artifact@v4
         with:
