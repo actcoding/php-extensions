@@ -48,6 +48,8 @@ jobs:
             PHP_VERSION=${{ matrix.php_version }}
             PHP_EXTENSION=${{ matrix.extension }}
 
+      - run: ls -Al
+
       - name: Archive extension
         uses: actions/upload-artifact@v4
         with:
