@@ -6,10 +6,10 @@ ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/relea
 
 ARG EXTENSION=pgsql
 
-RUN EXTENSION_DIR="$(php -r "echo ini_get('extension_dir');")" && \
-    install-php-extensions "${EXTENSION}" && \
-    mkdir /data && \
-    cp "${EXTENSION_DIR}/${EXTENSION}.so" /data
+RUN mkdir /data
+RUN install-php-extensions "${EXTENSION}"
+RUN export EXTENSION_DIR=$(php -r 'echo ini_get("extension_dir");') && \
+    cp -v "${EXTENSION_DIR}/${EXTENSION}.so" /data
 
 
 FROM scratch
