@@ -44,8 +44,9 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           push: false
           outputs: .
-
-      - run: ls -Al
+          build-args: |
+            PHP_VERSION=${{ matrix.php_version }}
+            PHP_EXTENSION=${{ matrix.extension }}
 
       - name: Archive extension
         uses: actions/upload-artifact@v4
@@ -53,6 +54,7 @@ jobs:
           name: ext-${{ matrix.extension }}-php-${{ matrix.php_version }}-${{ matrix.arch }}
           path: ${{ matrix.extension }}.so
           retention-days: 1
+          if-no-files-found: error
 
   upload:
     runs-on: ubuntu-latest
